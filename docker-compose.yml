@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: ./node
+      dockerfile: Dockerfile
+    container_name: app
+    tty: true
+    volumes:
+      - ./node:/usr/app
+      - /usr/src/app/node_modules
+    links:
+      - nodedb
+    depends_on:
+      - nodedb
+    networks:
+      - nodenet
+
+  nodedb:
+    image: mysql:8.0
+    command: --innodb-use-native-aio=0
+    container_name: nodedb
+    restart: always
+    tty: true
+    ports:
+      - "33061:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: nodedb
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    networks:
+      - nodenet
+
+  nginx:
+      build:
+        context: ./nginx
+        dockerfile: Dockerfile
+      container_name: nginx
+      tty: true
+      ports:
+        - "8080:80"
+      links:
+        - app
+      depends_on:
+        - app
+      networks:
+        - nodenet
+
+networks:
+  nodenet:
+    driver: bridge
