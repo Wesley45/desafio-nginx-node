@@ -6,10 +6,13 @@ services:
       context: ./node
       dockerfile: Dockerfile
     container_name: app
+    entrypoint: dockerize -wait tcp://nodedb:3306 -timeout 20s npm run start
     tty: true
+    ports:
+      - "3000:3000"
     volumes:
       - ./node:/usr/app
-      - /usr/src/app/node_modules
+      - /usr/app/node_modules
     links:
       - nodedb
     depends_on:
